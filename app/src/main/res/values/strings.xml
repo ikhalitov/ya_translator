@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Translator</string>
+    <string name="no_inet_title">Отсутствует соединение с интернетом</string>
+    <string name="no_inet_message">Отсутствует соединение с интернетом. Установите соединение и повторите попытку</string>
+    <string name="repeat">Повторить</string>
+    <string name="save_in_favorites">Добавленно в избранное</string>
+    <string name="yet_in_save_in_favorites">Уже есть в избранном</string>
+    <string name="title_activity_history">HistoryActivity</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="history">История</string>
+    <string name="favorites">Избранное</string>
+    <string name="delete_favorites">Вы уверены что хотите удалить все из Избранного?</string>
+    <string name="delete_history">Вы уверены что хотите удалить все из Истории?</string>
+    <string name="yes">Да</string>
+    <string name="no">Нет</string>
+</resources>
