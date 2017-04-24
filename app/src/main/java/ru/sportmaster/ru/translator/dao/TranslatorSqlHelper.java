@@ -9,7 +9,7 @@ import ru.sportmaster.ru.translator.TranslatorApplication;
 public class TranslatorSqlHelper extends SQLiteOpenHelper {
 
     public TranslatorSqlHelper() {
-        super(TranslatorApplication.getContext(), "ya_db", null, 1);
+        super(TranslatorApplication.getContext(), "ya_translator_db", null, 1);
     }
 
     @Override

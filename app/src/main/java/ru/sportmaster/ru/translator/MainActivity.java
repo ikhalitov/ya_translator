@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
@@ -83,18 +84,16 @@ public class MainActivity extends AppCompatActivity {
     public static final String langName = "langName";
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
         new HistoryTable();
-        if (RESULT_CANCELED == resultCode) {
-            //Если перешли откуда-то, но ничего не выбрали
-            return;
-        } else if (data.getExtras() != null) {
-            if (data.getExtras().getString(FROM_LANGUAGE_CHOOSE_ACTIVITY) != null) {
+        if (intent != null && intent.getExtras() != null) {
+            Bundle extras = intent.getExtras();
+            if (extras.getString(FROM_LANGUAGE_CHOOSE_ACTIVITY) != null) {
                 //Если перешли из выбора языка
                 //смотрим по коду кнопки 1 или 2, какая кнопка была использована для выбора языка
-                String buttonCode = data.getExtras().getString(MainActivity.buttonCode);
-                String langName = data.getExtras().getString(MainActivity.langName);
+                String buttonCode = extras.getString(MainActivity.buttonCode);
+                String langName = extras.getString(MainActivity.langName);
                 //Определяем на какой код языка меняется кнопка
                 String langCode = langToCode.get(langName);
                 if (langCode == null) {
@@ -112,8 +111,8 @@ public class MainActivity extends AppCompatActivity {
                 }
                 //переводим текст
                 translateText(true);
-            } else if (data.getExtras().get(FROM_FAVORITES_HISTORY) != null) {
-                Bundle bundle = data.getExtras();
+            } else if (extras.get(FROM_FAVORITES_HISTORY) != null) {
+                Bundle bundle = extras;
 
                 String code1 = bundle.getString(HistoryTable.LANG_CODE_1);
                 button1.setText(codeToLang.get(code1));
@@ -123,11 +122,22 @@ public class MainActivity extends AppCompatActivity {
                 button2.setText(codeToLang.get(code2));
                 buttonCodesMap.put(buttonCode2, code2);
 
+                Log.e("OPPs4= ", HistoryTable.TEXT_ORIGINAL);
+                Log.e("OPPs5= ", bundle.getString(HistoryTable.TEXT_ORIGINAL));
+
                 editText.setText(bundle.getString(HistoryTable.TEXT_ORIGINAL));
                 textView.setText(bundle.getString(HistoryTable.TEXT_TRANSLATED));
             }
         }
+
+
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
 
     private boolean isEqualsLanguage(String buttonCode, String langCode) {
         //выбираем код кнопки, в зависимости от того на какой кнопке мы меняли язык
@@ -294,7 +304,7 @@ public class MainActivity extends AppCompatActivity {
                 Bundle bundle = new Bundle();
                 bundle.putString(buttonCode, buttonCode1);
                 intent.putExtras(bundle);
-                startActivityForResult(intent, Integer.parseInt(buttonCode1));
+                startActivityForResult(intent, 0);
             }
         });
         button2.setOnClickListener(new View.OnClickListener() {
@@ -305,7 +315,7 @@ public class MainActivity extends AppCompatActivity {
                 Bundle extras = new Bundle();
                 extras.putString(buttonCode, buttonCode2);
                 intent.putExtras(extras);
-                startActivityForResult(intent, Integer.parseInt(buttonCode2));
+                startActivityForResult(intent, 0);
             }
         });
 
@@ -368,48 +378,30 @@ public class MainActivity extends AppCompatActivity {
         if (history.getTextOriginal().trim().isEmpty()) {
             return;
         }
-        final Observable<History> historyObservable = TranslatorApplication.getStorIOSQLite().get().object(History.class).withQuery(Query.builder().table(HistoryTable.TABLE).where("id = ?").whereArgs(history.getId()).build()).prepare().asRxObservable();
-        Subscriber<History> subscriber = new Subscriber<History>() {
-            @Override
-            public void onCompleted() {
-            }
-
-            @Override
-            public void onError(Throwable e) {
-            }
-
-            @Override
-            public void onNext(History previousHistory) {
-                unsubscribe();
-                if (previousHistory != null && previousHistory.getFavorite().equals(Boolean.TRUE) && isFavorite) {
-                    //Объект уже есть в избранном, поэтому сообщим пользователю об этом
-                    showToast(getResources().getString(R.string.yet_in_save_in_favorites));
-                } else {
-                    if (previousHistory != null && previousHistory.getFavorite().equals(Boolean.TRUE) && !isFavorite) {
-                        //Объект уже есть в избранном поэтому не перезаписываем его
-                        Long lastModifyDate = getModifyDate();
-                        if (previousHistory.getTime() < lastModifyDate) {
-                            history.setTime(System.currentTimeMillis());
-                            history.setFavorite(previousHistory.getFavorite());
-                            TranslatorApplication.getStorIOSQLite().put().object(history).prepare().executeAsBlocking();
-                        }
-                    } else {
-                        //Требуется сохранить объект
-                        TranslatorApplication.getStorIOSQLite().put().object(history).prepare().asRxObservable().subscribe(new Action1<PutResult>() {
-                            @Override
-                            public void call(PutResult putResult) {
-                                if (isFavorite) {
-                                    //показываем сообщение о добавление в избранное
-                                    showToast(getResources().getString(R.string.save_in_favorites));
-                                }
-                            }
-                        });
-                    }
+        History previousHistory = TranslatorApplication.getStorIOSQLite().get().object(History.class).withQuery(Query.builder().table(HistoryTable.TABLE).where("id = ?").whereArgs(history.getId()).build()).prepare().executeAsBlocking();
+        if (previousHistory != null && previousHistory.getFavorite().equals(Boolean.TRUE) && isFavorite) {
+            //Объект уже есть в избранном, поэтому сообщим пользователю об этом
+            showToast(getResources().getString(R.string.yet_in_save_in_favorites));
+        } else {
+            if (previousHistory != null && previousHistory.getFavorite().equals(Boolean.TRUE) && !isFavorite) {
+                //Объект уже есть в избранном поэтому не перезаписываем его
+                Long lastModifyDate = getModifyDate();
+                if (previousHistory.getTime() < lastModifyDate) {
+                    history.setTime(System.currentTimeMillis());
+                    history.setFavorite(previousHistory.getFavorite());
+                    TranslatorApplication.getStorIOSQLite().put().object(history).prepare().executeAsBlocking();
+                }else{
+                    previousHistory.setTime(System.currentTimeMillis());
+                    TranslatorApplication.getStorIOSQLite().put().object(previousHistory).prepare().executeAsBlocking();
+                }
+            } else {
+                //Требуется сохранить объект
+                TranslatorApplication.getStorIOSQLite().put().object(history).prepare().executeAsBlocking();
+                if (isFavorite) {
+                    showToast(getResources().getString(R.string.save_in_favorites));
                 }
             }
-        };
-        historyObservable
-                .subscribe(subscriber);
+        }
 
 
     }

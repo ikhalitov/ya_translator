@@ -1,6 +1,7 @@
 package ru.sportmaster.ru.translator.adapter;
 
 import android.app.Activity;
+import android.app.admin.SystemUpdatePolicy;
 import android.support.annotation.IdRes;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
@@ -50,6 +51,7 @@ public class HistoryAdapter extends ArrayAdapter<History> {
                 } else {
                     imageView1.setImageResource(R.drawable.favorites);
                     history.setFavorite(true);
+                    history.setTime(System.currentTimeMillis());
                     HistoryActivity.updateHistory(history);
                 }
             }

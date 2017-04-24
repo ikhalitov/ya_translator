@@ -13,7 +13,6 @@ import android.widget.ListView;
 public class LanguageChooseActivity extends AppCompatActivity {
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -27,7 +26,7 @@ public class LanguageChooseActivity extends AppCompatActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intentFinish = new Intent();
+                Intent intentFinish = new Intent(LanguageChooseActivity.this, MainActivity.class);
                 Bundle bundle = new Bundle();
                 bundle.putString(MainActivity.buttonCode, (String) intent.getExtras().get(MainActivity.buttonCode));
                 bundle.putString(MainActivity.langName, ((AppCompatTextView) view).getText().toString());
@@ -35,6 +34,7 @@ public class LanguageChooseActivity extends AppCompatActivity {
                 intentFinish.putExtras(bundle);
                 LanguageChooseActivity.this.setResult(RESULT_OK, intentFinish);
                 finish();
+                startActivity(intentFinish);
             }
         });
 
